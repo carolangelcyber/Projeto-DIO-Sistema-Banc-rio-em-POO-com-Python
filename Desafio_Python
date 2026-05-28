@@ -1,0 +1,128 @@
+Desafio Python-Script
+
+from abc import ABC, abstractmethod
+
+class Cliente:
+    def __init__(self, endereco):
+        self.endereco = endereco
+        self.contas = []
+
+    def realizar_transacao(self, conta, transacao):
+        pass  
+
+    def adicionar_conta(self, conta):
+        pass  
+
+
+class PessoaFisica(Cliente):
+    def __init__(self, cpf, nome, data_nascimento, endereco):
+        super().__init__(endereco)  
+        self.cpf = cpf
+        self.nome = nome
+        self.data_nascimento = data_nascimento
+
+if __name__ == "__main__":
+    print("Testando cadastro de conta do cliente")
+    meu_cliente = PessoaFisica("12345678999", "Lola", "01/11/2001", "Rua Augusta")
+    print(f"Sucesso! Cliente registrado: {meu_cliente.nome}")
+    print(f"Endereço confirmado: {meu_cliente.endereco}")
+
+class Conta:
+    def __init__(self, numero, cliente, agencia="0001"):
+        self.saldo = 0.0
+        self.numero = numero
+        self.agencia = agencia
+        self.cliente = cliente
+        self.historico = []  # Ajustado para lista vazia temporária
+
+    def sacar(self, valor):
+        if valor > self.saldo:
+            print("Saldo insuficiente!")
+            return False
+        self.saldo -= valor
+        return True
+
+    def depositar(self, valor):
+        if valor <= 0:
+            print("Valor inválido para depósito!")
+            return False
+        self.saldo += valor
+        return True
+
+minha_conta = Conta(1, meu_cliente)
+print(f"conta numero, {minha_conta.numero} crianda para {minha_conta.cliente.nome}!")
+
+minha_conta.depositar(200.0)
+print(f"Saldo atual da conta: R$ {minha_conta.saldo:.2f}")
+
+class ContaCorrente(Conta):
+    def __init__(self, numero, cliente, limite=500.0, limite_saque=3):
+        super().__init__(numero, cliente)
+        self.limite = limite
+        self.limite_saque = limite_saque
+
+minha_cc = ContaCorrente(2, meu_cliente)
+print(f"Conta Corrente número {minha_cc.numero} criada com sucesso!")
+print(f"Limite disponível: R$ {minha_cc.limite:.2f}")
+print(f"Limite de saques diários: {minha_cc.limite_saque}")
+
+class Historico:
+    def __init__(self):
+        self.transacoes = []  
+
+    def adicionar_transacao(self, tipo_transacao, valor_transacao):
+        frase = f"{tipo_transacao}: R$ {valor_transacao}"
+        self.transacoes.append(frase)
+
+print("\n=== TESTANDO SISTEMA COM HISTÓRICO ===")
+historico_da_lola = Historico()
+historico_da_lola.adicionar_transacao("Depósito", 200.0)
+historico_da_lola.adicionar_transacao("Saque", 50.0)
+
+print("Extrato do Cliente:")
+for item in historico_da_lola.transacoes:
+    print(f"-> {item}")
+
+class Transacao(ABC):
+    @property
+    @abstractmethod
+    def valor(self):
+        pass
+
+    @abstractmethod
+    def registrar(self, conta):
+        pass
+
+class Saque(Transacao):
+    def __init__(self, valor):
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+
+    def registrar(self, conta):
+        conta.sacar(self.valor)
+
+
+print("\n=== TESTANDO SAQUE ===")
+meu_saque = Saque(100.0)
+meu_saque.registrar(minha_conta)
+print(f"Saldo final após o saque: R$ {minha_conta.saldo:.2f}")
+
+class Deposito(Transacao):
+    def __init__(self, valor):
+        self._valor = valor
+
+    @property
+    def valor(self):
+        return self._valor
+
+    def registrar(self, conta):
+        conta.depositar(self.valor)
+
+
+print("\n=== TESTANDO DEPÓSITO ===")
+meu_deposito = Deposito(350.0)
+meu_deposito.registrar(minha_conta)
+print(f"Saldo atual da conta: R$ {minha_conta.saldo:.2f}")
